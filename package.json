@@ -1,0 +1,29 @@
+{
+  "name": "whatsapp-central-base",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "White-label base for integrating WhatsApp (QR code pairing) into your own system: worker, REST API, webhooks and a demo panel.",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "migrate": "node src/migrate.ts",
+    "api": "node src/api.ts",
+    "worker": "node src/worker.ts",
+    "create-key": "node scripts/create-key.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "7.0.0-rc14",
+    "pg": "^8.23.1",
+    "pino": "10.4.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.23.1",
+    "@types/qrcode": "^1.5.6",
+    "typescript": "^5.9.3"
+  }
+}

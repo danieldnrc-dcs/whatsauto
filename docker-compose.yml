@@ -1,0 +1,36 @@
+# Postgres + migrations + API/demo panel + one worker (session 1).
+# Usage: SECRET=$(openssl rand -base64 32) docker compose up --build
+# Add one more worker service per extra WhatsApp number (SESSION_ID=2, 3...).
+x-app: &app
+  build: .
+  restart: unless-stopped
+  environment: &env
+    DATABASE_URL: postgresql://whatsapp:whatsapp@db:5432/whatsapp
+    SECRET: ${SECRET:?Set SECRET (openssl rand -base64 32)}
+    MEDIA_DIR: /app/data/media
+  volumes: [media:/app/data/media]
+  depends_on: { db: { condition: service_healthy } }
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment: { POSTGRES_USER: whatsapp, POSTGRES_PASSWORD: whatsapp, POSTGRES_DB: whatsapp }
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U whatsapp"], interval: 3s, retries: 20 }
+  migrate:
+    <<: *app
+    restart: "no"
+    command: ["node", "src/migrate.ts"]
+  api:
+    <<: *app
+    command: ["node", "src/api.ts"]
+    ports: ["127.0.0.1:3000:3000"]   # put HTTPS (a reverse proxy) in front before exposing it
+    depends_on: { migrate: { condition: service_completed_successfully } }
+  worker-1:
+    <<: *app
+    command: ["node", "src/worker.ts"]
+    environment: { <<: *env, SESSION_ID: "1" }
+    depends_on: { migrate: { condition: service_completed_successfully } }
+
+volumes: { pgdata: {}, media: {} }
